@@ -40,11 +40,39 @@ jobs:
           name: app-image
           path: .
       - run: |
+          set -e
           gunzip -c app-image.tar.gz | docker load
-          docker run -d -p 8080:8080 --name prod-sim app:${{ github.sha }}
+          docker network create prod-net || true
+          cat > nginx.conf <<'EOF'
+          events {}
+          http {
+            upstream backend { server blue:8080; }
+            server { listen 80; location / { proxy_pass http://backend; } }
+          }
+          EOF
+          docker run -d --name blue --network prod-net app:${{ github.sha }}
+          docker run -d --name lb --network prod-net -p 8080:80 -v $PWD/nginx.conf:/etc/nginx/nginx.conf:ro nginx:alpine
           for i in {1..10}; do
-            if curl -fsS http://localhost:8080/healthz > /dev/null; then exit 0; fi
+            if curl -fsS http://localhost:8080/healthz > /dev/null; then break; fi
             sleep 2
           done
-          docker logs prod-sim
-          exit 1
+          docker run -d --name green --network prod-net app:${{ github.sha }}
+          for i in {1..10}; do
+            if docker run --rm --network prod-net curlimages/curl -s -o /dev/null -w '%{http_code}' http://green:8080/healthz | grep -q '^200$'; then break; fi
+            sleep 2
+          done
+          docker run --rm --network prod-net curlimages/curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d '{"amount":100}' -X POST http://green:8080/validate | grep -q '^200$'
+          docker run --rm --network prod-net curlimages/curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d '{"amount":-1}' -X POST http://green:8080/validate | grep -q '^400$'
+          cat > nginx.conf <<'EOF'
+          events {}
+          http {
+            upstream backend { server green:8080; }
+            server { listen 80; location / { proxy_pass http://backend; } }
+          }
+          EOF
+          docker exec lb nginx -s reload
+          for i in {1..10}; do
+            if curl -fsS http://localhost:8080/healthz > /dev/null; then break; fi
+            sleep 2
+          done
+          docker rm -f blue
