@@ -1,0 +1,20 @@
+{
+  "name": "payflowmx-transaction-validator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "jest --ci"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pino": "^9.4.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
