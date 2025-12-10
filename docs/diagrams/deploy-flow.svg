@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect x="0" y="0" width="1200" height="700" fill="#ffffff"/>
+  <style>
+    .box{fill:#eef2ff;stroke:#1f2937;stroke-width:2}
+    .title{font-family:Arial,Helvetica,sans-serif;font-size:20px;fill:#111827}
+    .label{font-family:Arial,Helvetica,sans-serif;font-size:16px;fill:#111827}
+    .arrow{stroke:#111827;stroke-width:2;marker-end:url(#arrowhead)}
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#111827" />
+    </marker>
+  </defs>
+
+  <text x="30" y="40" class="title">Flujo de Despliegue y Verificación</text>
+
+  <rect class="box" x="60" y="100" width="220" height="80" rx="8"/>
+  <text x="80" y="140" class="label">Build imagen</text>
+
+  <rect class="box" x="330" y="100" width="220" height="80" rx="8"/>
+  <text x="350" y="140" class="label">Deploy contenedor</text>
+
+  <rect class="box" x="600" y="100" width="220" height="80" rx="8"/>
+  <text x="620" y="140" class="label">Health checks</text>
+
+  <rect class="box" x="870" y="100" width="260" height="80" rx="8"/>
+  <text x="890" y="130" class="label">Baseline k6</text>
+  <text x="890" y="155" class="label">p95, failed rate, RPS</text>
+
+  <line class="arrow" x1="280" y1="140" x2="330" y2="140"/>
+  <line class="arrow" x1="550" y1="140" x2="600" y2="140"/>
+  <line class="arrow" x1="820" y1="140" x2="870" y2="140"/>
+
+  <rect class="box" x="60" y="240" width="220" height="80" rx="8"/>
+  <text x="80" y="280" class="label">SLO gates</text>
+  <text x="80" y="305" class="label">p95, disponibilidad, 5xx</text>
+
+  <rect class="box" x="360" y="240" width="220" height="80" rx="8"/>
+  <text x="380" y="280" class="label">Promote</text>
+
+  <rect class="box" x="660" y="240" width="220" height="80" rx="8"/>
+  <text x="680" y="280" class="label">Rollback</text>
+
+  <line class="arrow" x1="980" y1="180" x2="170" y2="240"/>
+  <line class="arrow" x1="280" y1="280" x2="360" y2="280"/>
+  <line class="arrow" x1="280" y1="280" x2="660" y2="280"/>
+
+  <rect class="box" x="60" y="380" width="220" height="80" rx="8"/>
+  <text x="80" y="420" class="label">Dashboards</text>
+  <text x="80" y="445" class="label">Prometheus/Grafana</text>
+
+  <rect class="box" x="360" y="380" width="260" height="80" rx="8"/>
+  <text x="380" y="420" class="label">Jaeger Traces</text>
+  <text x="380" y="445" class="label">Correlación X-Trace-Id</text>
+
+  <line class="arrow" x1="170" y1="320" x2="170" y2="380"/>
+  <line class="arrow" x1="490" y1="320" x2="490" y2="380"/>
+
+  <text x="60" y="520" class="label">Verificación post‑deploy: baseline → gates → decisión (promote/rollback) → observación continua</text>
+</svg>

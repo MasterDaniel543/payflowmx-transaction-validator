@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect x="0" y="0" width="1200" height="700" fill="#ffffff"/>
+  <style>
+    .box{fill:#e5f9f4;stroke:#0f172a;stroke-width:2}
+    .title{font-family:Arial,Helvetica,sans-serif;font-size:20px;fill:#111827}
+    .label{font-family:Arial,Helvetica,sans-serif;font-size:16px;fill:#111827}
+    .arrow{stroke:#111827;stroke-width:2;marker-end:url(#arrowhead)}
+    .dashed{stroke-dasharray:6 4}
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#111827" />
+    </marker>
+  </defs>
+
+  <text x="30" y="40" class="title">Arquitectura de Monitoreo</text>
+
+  <!-- App centro -->
+  <rect class="box" x="500" y="120" width="220" height="90" rx="8"/>
+  <text x="520" y="155" class="label">App (Node/Express)</text>
+  <text x="520" y="180" class="label">Métricas, Logs, OTEL</text>
+
+  <!-- Prometheus -->
+  <rect class="box" x="150" y="90" width="220" height="70" rx="8"/>
+  <text x="170" y="130" class="label">Prometheus</text>
+  <line class="arrow" x1="500" y1="160" x2="370" y2="125"/>
+  <text x="410" y="120" class="label">/metrics</text>
+
+  <!-- Grafana (métricas) -->
+  <rect class="box" x="150" y="190" width="220" height="70" rx="8"/>
+  <text x="170" y="230" class="label">Grafana (Dashboards)</text>
+  <line class="arrow" x1="260" y1="160" x2="260" y2="190"/>
+  <text x="270" y="175" class="label">Query</text>
+
+  <!-- Loki/Promtail -->
+  <rect class="box" x="850" y="100" width="220" height="70" rx="8"/>
+  <text x="870" y="140" class="label">Loki</text>
+  <rect class="box" x="850" y="200" width="220" height="70" rx="8"/>
+  <text x="870" y="240" class="label">Grafana (Explore)</text>
+  <rect class="box" x="500" y="240" width="220" height="70" rx="8"/>
+  <text x="520" y="280" class="label">Promtail</text>
+  <line class="arrow" x1="610" y1="210" x2="610" y2="240"/>
+  <line class="arrow" x1="610" y1="240" x2="850" y2="135"/>
+  <text x="520" y="225" class="label">logs/app.log</text>
+  <line class="arrow" x1="960" y1="170" x2="960" y2="200"/>
+  <text x="970" y="185" class="label">LogQL</text>
+
+  <!-- Jaeger -->
+  <rect class="box" x="500" y="360" width="220" height="70" rx="8"/>
+  <text x="520" y="400" class="label">Jaeger</text>
+  <line class="arrow" x1="610" y1="210" x2="610" y2="360"/>
+  <text x="620" y="290" class="label">OTEL</text>
+
+  <!-- k6 -->
+  <rect class="box" x="60" y="360" width="220" height="70" rx="8"/>
+  <text x="80" y="400" class="label">k6 (Stress Test)</text>
+  <line class="arrow" x1="280" y1="395" x2="500" y2="165"/>
+  <text x="300" y="370" class="label">HTTP</text>
+
+  <!-- Leyenda -->
+  <text x="60" y="520" class="label">Flujos: Métricas (App→Prometheus→Grafana), Logs (App→Promtail→Loki→Grafana), Trazas (App→OTEL→Jaeger), Carga (k6→App)</text>
+</svg>
