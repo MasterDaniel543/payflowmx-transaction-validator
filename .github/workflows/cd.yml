@@ -1,5 +1,6 @@
 name: cd
-on: push
+on:
+  push:
 
 jobs:
   build_and_test:
@@ -34,10 +35,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: docker compose version
-
-      - run: docker compose up -d app prometheus grafana loki promtail jaeger
+      - run: docker compose up -d --build app prometheus grafana loki promtail jaeger
         working-directory: FIN/observability
+
+      - id: net
+        shell: bash
+        run: |
+          NET=$(docker network ls | awk '/_obsnet/ {print $2}' | head -n1)
+          echo "net=$NET" >> "$GITHUB_OUTPUT"
 
       - name: Wait for app health
         run: |
@@ -45,10 +50,11 @@ jobs:
             if curl -sSf http://localhost:8080/healthz >/dev/null; then exit 0; fi
             sleep 2
           done
-          echo "App not healthy"; docker compose logs app; exit 1
+          docker compose logs app
+          exit 1
         working-directory: FIN/observability
 
-      - name: k6 baseline (thresholds gating)
+      - name: k6_baseline
         run: |
           cat > script.js <<'EOF'
           import http from "k6/http";
@@ -72,7 +78,7 @@ jobs:
             sleep(0.1);
           }
           EOF
-          docker run --rm --network observability_obsnet -v "$PWD:/work" -w /work grafana/k6 run script.js | tee k6-baseline.txt
+          docker run --rm --network "${{ steps.net.outputs.net }}" -v "$PWD:/work" -w /work grafana/k6 run script.js | tee k6-baseline.txt
         working-directory: FIN/observability
 
       - uses: actions/upload-artifact@v4
@@ -80,9 +86,48 @@ jobs:
           name: k6-baseline
           path: FIN/observability/k6-baseline.txt
 
-      - name: Prometheus quick check
+      - name: k6_mixed
+        continue-on-error: true
         run: |
-          curl -sSf http://localhost:9090/api/v1/label/__name__/values | head -c 1000 > prometheus-labels.json
+          cat > script-mix.js <<'EOF'
+          import http from "k6/http";
+          import { sleep } from "k6";
+          export const options = {
+            stages: [
+              { duration: "15s", target: 20 },
+              { duration: "30s", target: 50 },
+              { duration: "15s", target: 0 },
+            ],
+            thresholds: {
+              http_req_duration: ["p(95)<250"],
+              http_req_failed: ["rate<0.05"],
+            },
+          };
+          const base = "http://app:8080";
+          export default function () {
+            const amount = Math.floor(Math.random()*300) - 50;
+            const body = JSON.stringify({ amount });
+            const r = Math.random();
+            if (r < 0.75) {
+              http.post(`${base}/validate`, body, { headers: { "Content-Type": "application/json" } });
+            } else if (r < 0.9) {
+              http.post(`${base}/validate`, JSON.stringify({ amount: -1 }), { headers: { "Content-Type": "application/json" } });
+            } else {
+              http.get(`${base}/fail`);
+            }
+            sleep(0.1);
+          }
+          EOF
+          docker run --rm --network "${{ steps.net.outputs.net }}" -v "$PWD:/work" -w /work grafana/k6 run script-mix.js | tee k6-mixed.txt
+        working-directory: FIN/observability
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: k6-mixed
+          path: FIN/observability/k6-mixed.txt
+
+      - name: Prometheus quick check
+        run: curl -sSf http://localhost:9090/api/v1/label/__name__/values | head -c 2000 > prometheus-labels.json
         working-directory: FIN/observability
 
       - uses: actions/upload-artifact@v4
@@ -90,7 +135,7 @@ jobs:
           name: prometheus-labels
           path: FIN/observability/prometheus-labels.json
 
-      - name: Cleanup
+      - name: Compose down
         if: always()
         run: docker compose down -v
         working-directory: FIN/observability
