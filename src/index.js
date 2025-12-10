@@ -1,7 +1,7 @@
+require('./telemetry')
 const app = require('./app')
-const pino = require('pino')
+const logger = require('./logger')
 
-const logger = pino()
 const port = process.env.PORT || 8080
 
 app.listen(port, () => {
